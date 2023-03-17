@@ -1,0 +1,129 @@
+
+    
+    ProgressBar progressBar;
+    ListView listView;
+
+    ArrayList <   HashMap<String, String>  > arrayList = new ArrayList<>();
+    HashMap <String, String> hashMap = new HashMap<>();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        listView = findViewById(R.id.listView);
+        progressBar = findViewById(R.id.progressBar);
+
+        String url = "https://ahrnsan.000webhostapp.com/apps/video.json";
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+
+                progressBar.setVisibility(View.GONE);
+
+                try {
+
+                    for (int x=0; x<response.length(); x++){
+
+                        JSONObject jsonObject = response.getJSONObject(x);
+                        String tittle = jsonObject.getString("tittle");
+                        String video_id = jsonObject.getString("video_id");
+                        String des = jsonObject.getString("des");
+                        String views = jsonObject.getString("views");
+
+                        hashMap = new HashMap<>();
+                        hashMap.put("tittle", tittle);
+                        hashMap.put("video_id", video_id);
+                        hashMap.put("des", des);
+                        hashMap.put("views", views);
+                        arrayList.add(hashMap);
+
+                    }
+
+                    MyAdapter myAdapter = new MyAdapter();
+                    listView.setAdapter(myAdapter);
+
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Toast.makeText(MainActivity.this, "There are some Problem", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+        RequestQueue queue = Volley.newRequestQueue(this);
+        queue.add(jsonArrayRequest);
+
+
+    }
+
+    //===========================================
+
+    public class MyAdapter extends BaseAdapter {
+
+        @SuppressLint("MissingInflatedId")
+        @Override
+        public int getCount() {
+
+            return arrayList.size();
+        }
+
+
+        @Override
+        public Object getItem(int position) {
+            return null;
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return 0;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+           LayoutInflater layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+           View myView= layoutInflater.inflate(R.layout.item, parent, false);
+
+            hashMap = arrayList.get(position);
+
+            TextView itemTittle = myView.findViewById(R.id.itemTittle);
+            TextView itemDescription = myView.findViewById(R.id.itemDescription);
+            TextView itemViews = myView.findViewById(R.id.itemViews);
+            ImageView itemImage = myView.findViewById(R.id.itemImage);
+            LinearLayout itemLay = myView.findViewById(R.id.itemLay);
+
+            String tittle= hashMap.get("tittle");
+            String video_id= hashMap.get("video_id");
+            String des= hashMap.get("des");
+            String views= hashMap.get("views");
+
+
+            itemTittle.setText(tittle);
+            itemDescription.setText(des);
+            itemViews.setText(views);
+
+            Picasso.get().load("https://img.youtube.com/vi/"+video_id+"/0.jpg")
+                    .placeholder(R.drawable.load)
+                    .into(itemImage);
+
+            itemLay.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    VideoPage.URL = "https://www.youtube.com/embed/"+video_id;
+                    startActivity(new Intent(MainActivity.this, VideoPage.class));
+                }
+            });
+
+            return myView;
+        }
+    }
